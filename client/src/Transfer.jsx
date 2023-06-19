@@ -31,7 +31,7 @@ function Transfer({ address, setBalance }) {
       <label>
         Send Amount
         <input
-          placeholder="1, 2, 3..."
+          placeholder="1, 2, 3."
           value={sendAmount}
           onChange={setValue(setSendAmount)}
         ></input>
