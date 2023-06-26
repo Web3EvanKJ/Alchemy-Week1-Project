@@ -5,7 +5,6 @@ import * as utils from "ethereum-cryptography/utils";
 import * as keccak from "ethereum-cryptography/keccak";
 
 function Transfer({ address, setBalance, senderPriv }) {
-  console.log(senderPriv);
   const [sendAmount, setSendAmount] = useState("");
   const [recipient, setRecipient] = useState("");
 
@@ -40,8 +39,6 @@ function Transfer({ address, setBalance, senderPriv }) {
     let sign = await signMessage(message);
 
     const hashedMessage = utils.toHex(hashMessage(message));
-
-    console.log(secp256k1.verify(sign, hashedMessage, senderPubKey));
 
     sign = JSON.stringify({
       ...sign,
