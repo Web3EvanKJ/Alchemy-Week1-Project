@@ -2,14 +2,17 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const port = 3042;
+const secp = require("ethereum-cryptography/secp256k1");
+const { keccak256 } = require("ethereum-cryptography/keccak");
+const { utf8ToBytes, toHex } = require("ethereum-cryptography/utils");
 
 app.use(cors());
 app.use(express.json());
 
 const balances = {
-  "5f91a6be2c0d9886ad9d": 100,
-  "7cd02d300297b9a2c0bd": 50,
-  "723ebcce7ec95f3d612b": 75,
+  "7cde455607535f6da730": 100,
+  "1bb66262df0ce3f3cf5a": 50,
+  a9b43d78cc38f693c168: 75,
 };
 
 app.get("/balance/:address", (req, res) => {
@@ -20,9 +23,29 @@ app.get("/balance/:address", (req, res) => {
 
 app.post("/send", (req, res) => {
   // TODO: get a signature from the client side application
+
   // recover the public address from the signature
 
-  const { sender, recipient, amount } = req.body;
+  const { sender, recipient, amount, sign, senderPubKey } = req.body;
+
+  const uint8Pub = new Uint8Array(Object.keys(senderPubKey).length);
+  Object.values(senderPubKey).forEach((value, i) => (uint8Pub[i] = value));
+
+  const message = toHex(hashMessage(sender + "_" + amount + "_" + recipient));
+
+  // Parsed string back to their original form
+  let parsedSign = JSON.parse(sign);
+  parsedSign.r = BigInt(parsedSign.r);
+  parsedSign.s = BigInt(parsedSign.s);
+
+  const recovered = secp.secp256k1.verify(parsedSign, message, uint8Pub);
+
+  if (!recovered) {
+    res
+      .status(400)
+      .send({ message: "You aren't the owner of this private key!" });
+    return;
+  }
 
   setInitialBalance(sender);
   setInitialBalance(recipient);
@@ -45,3 +68,8 @@ function setInitialBalance(address) {
     balances[address] = 0;
   }
 }
+
+const hashMessage = (message) => {
+  const bytes = utf8ToBytes(message);
+  return keccak256(bytes);
+};
